@@ -148,10 +148,77 @@ void l4free(void *mem) {
 		 */
 		UPDATE_TOP(ptr->next);
 	}
+	/*
+	 * the pointer is not belong to the linked list, aka
+	 * was not returned by l4alloc, l4realloc or l4calloc
+	 * do nothing
+	 */
 }
 
+/*
+ * realloc 
+ * - if size = 0, call l4free() and return NULL
+ * - if mem = NULL, call l4malloc()
+ * current scheme is to check for the current block size, if the required size
+ * is larger than the current block size, create a new block, copy data from 
+ * old block to it and set old block state to MEM_FREE
+ *
+ * if the required size is less than the current block size, we will 
+ * decide to create a new free block base on the GAP_VAL
+ */
 void *l4realloc(void *mem, size_t size) {
-	block_t *block = mem + sizeof(block_t);
-	block = get_free_block(size);
-	return block->mem;
+	if (size == 0) {
+		l4free(mem);
+		return NULL;
+	}
+	if (mem == NULL) {
+		block_t *p = get_free_block(size);
+		return p->mem;
+	}
+	block_t *ptr = (block_t *)(mem + sizeof(block_t));
+
+	if (size > ptr->size) {
+		//set current block to MEM_FREE
+		ptr->state = MEM_FREE;
+
+		//find a suitable block, or create new block
+		block_t *block = get_free_block(size);
+		/*
+		 * ERROR checking?
+		 * use memcpy
+		 */
+		memcpy(block->mem, ptr->mem, ptr->size);
+		return block->mem;
+	}
+	else {
+		size_t gap = ptr->size - (size + sizeof(block_t));
+		if (gap > GAP_VAL) {
+			//let's create a new block here
+			block_t *block = (block_t *)(mem+size);
+
+			block->mem = mem+size+sizeof(block_t);
+			block->state = MEM_FREE;
+			block->size = gap;
+			block->next = ptr->next;
+
+			//set up current block
+			ptr->size = size;
+			ptr->next = block;
+
+			return ptr;
+		}
+		else {
+			//no need to create a new one
+			return mem;
+		}
+	}
+}
+
+void *l4calloc(size_t size) {
+	block_t *p = get_free_block(size);
+	/*
+	 * set all that memory to zero
+	 */
+	memset(p->mem, 0, size);
+	return p->mem;
 }
