@@ -17,7 +17,7 @@ void l4constructor() {
 	heap_top->size = 0;
 	heap_top->next = NULL;
 #ifdef __DEBUG__
-	P_DEBUG("calling constructor with p: %p\n", p);
+	P_DEBUG("calling constructor with ptr: %p\n", ptr);
 #endif
 }
 
@@ -81,7 +81,7 @@ static block_t *get_free_block(size_t size) {
 	 * these values are expected to be equal to each others
 	 */
 #ifdef __DEBUG__ 
-	P_DEBUG("getting new block:\nval: %p\ntop: %p\n", val, heap_top);
+	P_DEBUG("getting new block:\n\tval: %p\n\ttop: %p\n", val, heap_top);
 #endif
 	val += sizeof(block_t) + size;
 	ptr = (block_t *)val;
@@ -122,8 +122,7 @@ void l4free(void *mem) {
 #ifdef __DEBUG__ 
 		P_DEBUG("inner free from: %p to %p\n", block, ptr);
 		//raw size of the merged block
-		P_DEBUG("merge into a block of: %d bytes\n", \
-				(void *)block - (void *)ptr + ptr->size);
+		P_DEBUG("merge into a block of: %ld bytes\n", (void *)block - (void *)ptr + ptr->size);
 #endif
 		block->size = block->mem - (ptr->mem + ptr->size);
 		block->state = MEM_FREE;
@@ -137,7 +136,7 @@ void l4free(void *mem) {
 		size_t free_size = (void *)block - (void *)ptr + ptr->size;
 #ifdef __DEBUG__ 
 		P_DEBUG("free from top to :%p\n", ptr);
-		P_DEBUG("subtract heap_top by: %d bytes\n", free_size);
+		P_DEBUG("subtract heap_top by: %ld bytes\n", free_size);
 #endif
 		pthread_mutex_lock(&l4_lock);
 		sbrk(-free_size);
@@ -188,6 +187,9 @@ void *l4realloc(void *mem, size_t size) {
 		 * use memcpy
 		 */
 		memcpy(block->mem, ptr->mem, ptr->size);
+#ifdef __DEBUG__ 
+		P_DEBUG("size > ptr->size\n\tblock: %p\n\tptr: %p\n", block, ptr);
+#endif
 		return block->mem;
 	}
 	else {
@@ -204,11 +206,17 @@ void *l4realloc(void *mem, size_t size) {
 			//set up current block
 			ptr->size = size;
 			ptr->next = block;
+#ifdef __DEBUG__ 
+			P_DEBUG("size <= ptr->size\n\tblock: %p\n\tptr: %p\n", block, ptr);
+#endif
 
 			return ptr;
 		}
 		else {
 			//no need to create a new one
+#ifdef __DEBUG__ 
+			P_DEBUG("size <= ptr->size and the gap: %lu\n", gap);
+#endif
 			return mem;
 		}
 	}
@@ -219,6 +227,30 @@ void *l4calloc(size_t size) {
 	/*
 	 * set all that memory to zero
 	 */
+#ifdef __DEBUG__ 
+	P_DEBUG("calling memset at %p\n", p->mem);
+#endif
 	memset(p->mem, 0, size);
 	return p->mem;
 }
+
+#ifdef __DEBUG__ 
+void print_trace(void *mem) {
+	//the raw block
+	block_t *ptr = mem + sizeof(block_t);
+
+	while (ptr->state != MEM_FIRST) {
+		puts("----begin block----");
+		printf("raw @: %p\n", ptr);
+		printf("mem @: %p\n", ptr->mem);
+		printf("size : %ld\n", ptr->size);
+		printf("state: %d\n", ptr->state);
+		puts("-----end block-----");
+		puts("         |");
+		puts("         V");
+		
+		//move to next block
+		ptr = ptr->next;
+	}
+}
+#endif
