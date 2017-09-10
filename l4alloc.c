@@ -133,11 +133,15 @@ void l4free(void *mem) {
 		while (ptr->state == MEM_FREE) {
 			ptr = ptr->next;
 		}
+
+		size_t free_size = (void *)block - (void *)ptr + ptr->size;
 #ifdef __DEBUG__ 
 		P_DEBUG("free from top to :%p\n", ptr);
-		P_DEBUG("subtract heap_top by: %d bytes\n", \
-				(void *)block - (void *)ptr + ptr->size);
+		P_DEBUG("subtract heap_top by: %d bytes\n", free_size);
 #endif
+		pthread_mutex_lock(&l4_lock);
+		sbrk(-free_size);
+		pthread_mutex_unlock(&l4_lock);
 		/*
 		 * this will become garbage data, but since it mays contain important
 		 * data, should we clean this?
