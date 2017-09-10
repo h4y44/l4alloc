@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <string.h>
 
 /*
  * gap value, increase this to increase memory fragmentation, that 
