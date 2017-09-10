@@ -17,7 +17,7 @@ all:
 
 debug:
 	$(CC) $(DEBUG_CFLAGS) -c $(SOURCE) -o $(OBJECT)
-	$(LD) $(OBJECT) -o $(TARGET)
+	$(LD) $(LDFLAGS) $(OBJECT) -o $(TARGET)
 	@echo "Build done!"
 
 clean:
