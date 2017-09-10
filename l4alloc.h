@@ -21,8 +21,8 @@
 #include <string.h>
 
 /*
- * gap value, increase this to increase memory fragmentation, that 
- * means the more GAP_VAL is, the more small block you have in the 
+ * gap value, increase this to decrease memory fragmentation, that 
+ * means the more GAP_VAL is, the less small block you have in the 
  * linked list
  */
 #define GAP_VAL 1000 // ~1KB for each block
