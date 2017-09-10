@@ -1,29 +1,21 @@
-SOURCE = l4alloc.c
-OBJECT = l4alloc.o
-TARGET = libl4alloc.so 
+SOURCE = $(wildcard *.c)
+TARGET = $(SOURCE:.c=)
 
-CC = gcc 
-LD = gcc 
-RM = rm 
+LIB = ../libl4alloc.so
+CFLAGS = -Wall -c
 
-CFLAGS = -Wall -std=gnu99 -fPIC
-LDFLAGS = -shared
-DEBUG_CFLAGS = $(CFLAGS) -D__DEBUG__ -g
+%: %.c
 
-all:
-	$(CC) $(CFLAGS) -c $(SOURCE) -o $(OBJECT)
-	$(LD) $(LDFLAGS) $(OBJECT) -o $(TARGET)
-	@echo "Build done!"
+%: %.o
+	$(CC) $(LIB) -o $@ $^
 
-debug:
-	$(CC) $(DEBUG_CFLAGS) -c $(SOURCE) -o $(OBJECT)
-	$(LD) $(LDFLAGS) $(OBJECT) -o $(TARGET)
-	@echo "Build done!"
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+all: $(TARGET)
+	@echo "Done!"
 
 clean:
-	$(RM) -f $(OBJECT)
-	@echo "Clean done!"
+	$(RM) -f *.o $(TARGET)
 
-sweep:
-	$(RM) -f $(OBJECT) $(TARGET)
-	@echo "Sweep done!"
+#.PHONY: all clean
