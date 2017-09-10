@@ -1,6 +1,6 @@
-SOURCE = l4alloc.c
+SOURCE = l4alloc.c 
 OBJECT = l4alloc.o
-TARGET = libl4alloc.so 
+TARGET = libl4alloc.so
 
 CC = gcc 
 LD = gcc 
@@ -20,10 +20,14 @@ debug:
 	$(LD) $(LDFLAGS) $(OBJECT) -o $(TARGET)
 	@echo "Build done!"
 
+conv: debug 
+	$(CC) $(CFLAGS) -c l4alloc_conv.c -o l4alloc_conv.o
+	$(CC) $(LDFLAGS) $(OBJECT) l4alloc_conv.o -o libl4alloc_conv.so
+
 clean:
 	$(RM) -f $(OBJECT)
 	@echo "Clean done!"
 
 sweep:
-	$(RM) -f $(OBJECT) $(TARGET)
+	$(RM) -f *.so *.o
 	@echo "Sweep done!"

@@ -1,4 +1,14 @@
 #include "l4alloc.h"
+
+//save the head of the linked list
+static block_t *heap_top;
+/*
+ * mutex to advoid call simultaniously between threads
+ * may be i will implement concurrent malloc someday
+ */
+static pthread_mutex_t l4_lock;
+static block_t *get_free_block(size_t);
+
 /*
  * constructor of the lib
  */

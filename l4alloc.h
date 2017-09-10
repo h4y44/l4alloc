@@ -55,20 +55,10 @@ typedef struct block_t {
 	struct block_t *next; //point to next block
 } block_t;
 
-//save the head of the linked list
-static block_t *heap_top;
-/*
- * mutex to advoid call simultaniously between threads
- * may be i will implement concurrent malloc someday
- */
-pthread_mutex_t l4_lock;
-
 /*
  * function prototypes
  */
 void __attribute__((constructor)) l4constructor();
-
-static block_t *get_free_block(size_t);
 
 void *l4malloc(size_t);
 void *l4calloc(size_t);
