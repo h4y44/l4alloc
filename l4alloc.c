@@ -104,3 +104,50 @@ void *l4malloc(size_t size) {
 	block_t *p = get_free_block(size);
 	return p->mem;
 }
+
+/*
+ * free
+ */
+void l4free(void *mem) {
+	block_t *block = mem + sizeof(block_t);
+	block_t *ptr = block;
+	//the block is not the head
+	if (block != heap_top) {
+		while (ptr->state == MEM_FREE) {
+			ptr = ptr->next;
+		}
+		/*
+		 * merge free blocks in one (inner free, defragment)
+		 */
+#ifdef __DEBUG__ 
+		P_DEBUG("inner free from: %p to %p\n", block, ptr);
+		//raw size of the merged block
+		P_DEBUG("merge into a block of: %d bytes\n", \
+				(void *)block - (void *)ptr + ptr->size);
+#endif
+		block->size = block->mem - (ptr->mem + ptr->size);
+		block->state = MEM_FREE;
+		block->next = ptr->next;
+	}
+	else if (block == heap_top) {
+		while (ptr->state == MEM_FREE) {
+			ptr = ptr->next;
+		}
+#ifdef __DEBUG__ 
+		P_DEBUG("free from top to :%p\n", ptr);
+		P_DEBUG("subtract heap_top by: %d bytes\n", \
+				(void *)block - (void *)ptr + ptr->size);
+#endif
+		/*
+		 * this will become garbage data, but since it mays contain important
+		 * data, should we clean this?
+		 */
+		UPDATE_TOP(ptr->next);
+	}
+}
+
+void *l4realloc(void *mem, size_t size) {
+	block_t *block = mem + sizeof(block_t);
+	block = get_free_block(size);
+	return block->mem;
+}

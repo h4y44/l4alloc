@@ -26,9 +26,11 @@
  */
 #define GAP_VAL 1000 // ~1KB for each block
 
+#ifdef __DEBUG__ 
 #define P_DEBUG(fmt, ...) \
 	do { fprintf(stderr, "[%s:%d:%s] "fmt, __FILE__, \
 			__LINE__, __func__, __VA_ARGS__); } while(0)
+#endif
 
 #define UPDATE_TOP(top_new) \
 	do { heap_top = top_new; } while(0)
@@ -69,7 +71,7 @@ static block_t *get_free_block(size_t);
 
 void *l4malloc(size_t);
 void *l4calloc(size_t);
-void *l4realloc(size_t);
-int l4free(void *);
+void *l4realloc(void *, size_t);
+void l4free(void *);
 
 #endif
