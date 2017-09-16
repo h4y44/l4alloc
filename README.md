@@ -26,6 +26,7 @@ linked list corruption, and program behaviour is unpredictable!
 
 ## Todo
 - [ ] Using `mmap` on large blocks
+- [ ] Memory pools
 - [ ] More test cases
 - [ ] Being able to replace glibc's malloc in some cases
 
