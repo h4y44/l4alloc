@@ -10,6 +10,12 @@ static pthread_mutex_t l4_lock;
 static block_t *get_free_block(size_t);
 
 /*
+ * gap value, increase this to decrease memory fragmentation, that 
+ * means the more GAP_VAL is, the less small block you have in the 
+ * linked list
+ */
+static unsigned int gap_val;
+/*
  * constructor of the lib
  */
 void l4constructor() {
@@ -26,8 +32,17 @@ void l4constructor() {
 	heap_top->state = MEM_FIRST;
 	heap_top->size = 0;
 	heap_top->next = NULL;
+
+	char *gv = getenv("GAP_VAL");
+	if (!gv) {
+		gap_val = 1000;
+#ifdef __DEBUG__ 
+		P_DEBUG("no GAP_VAL env, set default value: %d\n", gap_val);
+#endif
+	}
+	gap_val = atoi(gv);
 #ifdef __DEBUG__
-	P_DEBUG("calling constructor with ptr: %p\n", ptr);
+	P_DEBUG("reading gap_val from GAP_VAL: %d\n", gap_val);
 #endif
 }
 
@@ -48,7 +63,7 @@ static block_t *get_free_block(size_t size) {
 			 * (inner allocation, causes memory fragment)
 			 */
 			int gap = ptr->size - (size + sizeof(block_t));
-			if (gap > GAP_VAL) {
+			if (gap > gap_val) {
 				/*
 				 * enough space, let's create a new block
 				 */
@@ -204,7 +219,7 @@ void *l4realloc(void *mem, size_t size) {
 	}
 	else {
 		size_t gap = ptr->size - (size + sizeof(block_t));
-		if (gap > GAP_VAL) {
+		if (gap > gap_val) {
 			//let's create a new block here
 			block_t *block = (block_t *)(mem+size);
 
@@ -232,7 +247,7 @@ void *l4realloc(void *mem, size_t size) {
 	}
 }
 
-void *l4calloc(size_t size) {
+void *l4calloc(size_t memsize, size_t size) {
 	block_t *p = get_free_block(size);
 	/*
 	 * set all that memory to zero

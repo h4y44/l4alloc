@@ -19,13 +19,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <string.h>
-
-/*
- * gap value, increase this to decrease memory fragmentation, that 
- * means the more GAP_VAL is, the less small block you have in the 
- * linked list
- */
-#define GAP_VAL 1000 // ~1KB for each block
+#include <stdlib.h>
 
 #ifdef __DEBUG__ 
 #define P_DEBUG(fmt, ...) \
@@ -61,7 +55,7 @@ typedef struct block_t {
 void __attribute__((constructor)) l4constructor();
 
 void *l4malloc(size_t);
-void *l4calloc(size_t);
+void *l4calloc(size_t, size_t);
 void *l4realloc(void *, size_t);
 void l4free(void *);
 
